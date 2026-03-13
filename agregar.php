@@ -13,14 +13,39 @@ if ($tipo === 'producto') {
 
 	// Manejo de imagen
 	$imagenNombre = null;
-	if (!empty($_FILES['imagen']) && $_FILES['imagen']['error'] === UPLOAD_ERR_OK) {
-		$tmp = $_FILES['imagen']['tmp_name'];
-		$orig = $_FILES['imagen']['name'];
-		$ext = strtolower(pathinfo($orig, PATHINFO_EXTENSION));
-		$allowed = ['jpg','jpeg','png','gif'];
-		if (in_array($ext, $allowed)) {
+	if (!empty($_FILES['imagen'])) {
+		$uploadErr = $_FILES['imagen']['error'];
+		if ($uploadErr !== UPLOAD_ERR_NO_FILE) {
+			if ($uploadErr !== UPLOAD_ERR_OK) {
+				$phpFileUploadErrors = array(
+					UPLOAD_ERR_INI_SIZE => 'El archivo excede upload_max_filesize en php.ini',
+					UPLOAD_ERR_FORM_SIZE => 'El archivo excede MAX_FILE_SIZE en el formulario',
+					UPLOAD_ERR_PARTIAL => 'El archivo fue subido parcialmente',
+					UPLOAD_ERR_NO_FILE => 'No se subió ningún archivo',
+					UPLOAD_ERR_NO_TMP_DIR => 'Falta carpeta temporal',
+					UPLOAD_ERR_CANT_WRITE => 'Fallo al escribir el archivo en el disco',
+					UPLOAD_ERR_EXTENSION => 'Subida detenida por extensión'
+				);
+				$errMsg = isset($phpFileUploadErrors[$uploadErr]) ? $phpFileUploadErrors[$uploadErr] : 'Error de subida code ' . $uploadErr;
+				header('Location: productos.php?error=' . urlencode('Error al subir imagen: ' . $errMsg));
+				exit;
+			}
+
+			$tmp = $_FILES['imagen']['tmp_name'];
+			$orig = $_FILES['imagen']['name'];
+			$ext = strtolower(pathinfo($orig, PATHINFO_EXTENSION));
+			$allowed = ['jpg','jpeg','png','gif'];
+			if (!in_array($ext, $allowed)) {
+				header('Location: productos.php?error=' . urlencode('Tipo de archivo no permitido: ' . $ext));
+				exit;
+			}
+
 			$imagenNombre = uniqid('img_') . '.' . $ext;
-			move_uploaded_file($tmp, __DIR__ . '/imagenes/' . $imagenNombre);
+			$destPath = __DIR__ . '/imagenes/' . $imagenNombre;
+			if (!move_uploaded_file($tmp, $destPath)) {
+				header('Location: productos.php?error=' . urlencode('Error al mover el archivo subido al directorio imagenes. Ver permisos.'));
+				exit;
+			}
 		}
 	}
 

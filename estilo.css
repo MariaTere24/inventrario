@@ -1,0 +1,104 @@
+/* estilo.css - Diseño moderno, responsive para Inventario Distrilay */
+
+:root{
+	--teal: #20c997; /* azul agua marina */
+	--pink: #ff6bb5; /* rosado */
+	--white: #ffffff;
+	--muted: #6c757d;
+	--card-shadow: 0 6px 18px rgba(32,201,151,0.08);
+	--radius: 10px;
+}
+
+*{box-sizing:border-box}
+body{
+	margin:0;
+	font-family: Inter, 'Segoe UI', Roboto, Arial, sans-serif;
+	background: linear-gradient(180deg, #f7fcfb 0%, #ffffff 100%);
+	color:#1b1b1b;
+}
+
+.sidebar{
+	position:fixed;
+	left:0;top:0;bottom:0;
+	width:240px;
+	background:var(--white);
+	border-right:1px solid #eee;
+	padding:18px;
+	display:flex;
+	flex-direction:column;
+	gap:12px;
+	z-index:20;
+	transition:width .28s ease, transform .25s ease, box-shadow .2s ease;
+}
+.sidebar.closed{width:72px;box-shadow:0 6px 24px rgba(0,0,0,0.06)}
+.brand{display:flex;align-items:center;gap:10px}
+.brand h1{font-size:1.1rem;margin:0;color:var(--teal);transition:opacity .2s ease}
+.hamburger{background:transparent;border:0;font-size:1.2rem;cursor:pointer}
+
+.nav{display:flex;flex-direction:column;gap:8px;margin-top:8px}
+.nav a{display:flex;align-items:center;gap:10px;padding:10px;border-radius:8px;text-decoration:none;color:#333}
+.nav a .icon{font-size:1.2rem;width:28px;text-align:center}
+.nav a .label{transition:opacity .18s ease, transform .18s ease}
+.nav a.active, .nav a:hover{background:linear-gradient(90deg,var(--teal),var(--pink));color:white}
+
+/* When collapsed: only show icons */
+.sidebar.closed .nav a{justify-content:center;padding:12px}
+.sidebar.closed .nav a .label{opacity:0;transform:translateX(-6px);width:0;visibility:hidden}
+.sidebar.closed .brand h1{opacity:0}
+
+.main{
+	margin-left:260px; /* space for sidebar */
+	padding:28px;
+	transition:margin-left .25s ease, padding .2s ease;
+}
+.sidebar.closed + .main{margin-left:96px}
+
+.main-header h2{margin:0;font-size:1.6rem}
+.main-header .muted{color:var(--muted);margin-top:6px}
+
+.cards{display:flex;gap:18px;margin-top:18px;flex-wrap:wrap}
+.card{flex:1;min-width:180px;background:var(--white);padding:18px;border-radius:var(--radius);box-shadow:var(--card-shadow);}
+.card-title{font-size:0.9rem;color:var(--muted)}
+.card-value{font-size:1.6rem;font-weight:700;margin-top:8px;color:var(--teal)}
+
+.panel{margin-top:22px;background:var(--white);padding:18px;border-radius:var(--radius);box-shadow:var(--card-shadow)}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:end}
+.form-grid label{display:block}
+.form-grid input[type="text"], .form-grid input[type="number"], .form-grid input[type="email"], .form-grid input[type="file"]{width:100%;padding:10px;border-radius:8px;border:1px solid #e6e6e6}
+
+.btn{display:inline-block;padding:8px 12px;border-radius:8px;text-decoration:none;border:0;cursor:pointer}
+.btn.primary{background:var(--teal);color:white}
+.btn.danger{background:#ff4d6d;color:white}
+.btn.edit{background:#2b7cff;color:white} /* azul para editar */
+.btn.view{background:#7a7a7a;color:white} /* gris para ver */
+.btn.small{padding:6px 8px;font-size:0.85rem}
+
+/* hover and focus */
+.btn:hover{transform:translateY(-2px);box-shadow:0 6px 18px rgba(0,0,0,0.08)}
+.btn:active{transform:translateY(0)}
+.btn.disabled{opacity:0.5;pointer-events:none}
+.btn.small{padding:6px 8px;font-size:0.85rem}
+
+.table-wrap{overflow:auto;margin-top:10px}
+.table{width:100%;border-collapse:collapse}
+.table thead th{background:linear-gradient(90deg,var(--teal),var(--pink));color:white;padding:10px;text-align:left}
+.table td{padding:10px;border-bottom:1px solid #f1f1f1}
+.thumb{width:56px;height:40px;object-fit:cover;border-radius:8px}
+.thumb.placeholder{display:inline-flex;align-items:center;justify-content:center;background:#f6f6f6;color:var(--muted);width:56px;height:40px;border-radius:8px}
+
+.footer{margin-top:26px;color:var(--muted)}
+
+.alert{padding:10px;border-radius:8px;margin:10px 0}
+.alert.error{background:#ffecec;color:#b00020;border:1px solid #f5c2c2}
+
+/* Responsive */
+@media (max-width:900px){
+	.sidebar{transform:translateX(-260px)}
+	.sidebar.open{transform:none}
+	.main{margin-left:20px}
+	.form-grid{grid-template-columns:1fr}
+	.cards{flex-direction:column}
+}
+
+/* small helpers */
+.muted{color:var(--muted)}

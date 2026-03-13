@@ -1,39 +1,49 @@
 <?php
 // conexion.php
-// Conexión a MySQL. Lee configuración desde config.php si existe.
+// Compatible con LOCAL y Railway
 
-// Valores por defecto
-$DB_HOST = 'localhost';
-$DB_USER = 'root';
-$DB_PASS = '';
-$DB_NAME = 'inventario';
-$DB_CREATE = true; // si true intentará crear la DB si no existe
+// Detectar si estamos en Railway
+if (isset($_ENV['MYSQLHOST'])) {
 
-// Si existe config.php, cargamos allí las variables (permite usar tu BD existente)
-if (file_exists(__DIR__ . '/config.php')) {
-    include __DIR__ . '/config.php';
-    // config.php puede sobreescribir $DB_HOST, $DB_USER, $DB_PASS, $DB_NAME, $DB_CREATE
+    // Configuración Railway
+    $DB_HOST = $_ENV['MYSQLHOST'];
+    $DB_USER = $_ENV['MYSQLUSER'];
+    $DB_PASS = $_ENV['MYSQLPASSWORD'];
+    $DB_NAME = $_ENV['MYSQLDATABASE'];
+    $DB_PORT = $_ENV['MYSQLPORT'];
+
+} else {
+
+    // Configuración LOCAL
+    $DB_HOST = 'localhost';
+    $DB_USER = 'root';
+    $DB_PASS = '';
+    $DB_NAME = 'inventario';
+    $DB_PORT = 3306;
+
 }
 
-// Conectar al servidor (sin seleccionar DB) para posibles operaciones administrativas
-$conn = new mysqli($DB_HOST, $DB_USER, $DB_PASS);
+// Permitir crear DB en local
+$DB_CREATE = true;
+
+// Conectar al servidor MySQL
+$conn = new mysqli($DB_HOST, $DB_USER, $DB_PASS, '', $DB_PORT);
+
 if ($conn->connect_error) {
     die('Error de conexión al servidor MySQL: ' . $conn->connect_error);
 }
 
-// Crear base de datos si está permitido y no existe
-if (empty($DB_CREATE)) {
-    // Si $DB_CREATE es false, asumimos que el usuario ya tiene la DB creada y no hacemos CREATE DATABASE
-} else {
-    $conn->query("CREATE DATABASE IF NOT EXISTS `". $DB_NAME ."` CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci");
+// Crear base de datos si no existe
+if ($DB_CREATE) {
+    $conn->query("CREATE DATABASE IF NOT EXISTS `$DB_NAME` CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci");
 }
 
-// Seleccionar la base de datos (debe existir si DB_CREATE=false)
+// Seleccionar base de datos
 if (!$conn->select_db($DB_NAME)) {
-    die('Base de datos "' . htmlspecialchars($DB_NAME) . '" no encontrada. Edita config.php para indicar tu base de datos o activa $DB_CREATE.');
+    die('Base de datos "' . htmlspecialchars($DB_NAME) . '" no encontrada.');
 }
 
-// Crear tablas necesarias si no existen (si la base de datos existe)
+// Crear tabla productos
 $sqlProductos = "CREATE TABLE IF NOT EXISTS productos (
     id INT AUTO_INCREMENT PRIMARY KEY,
     nombre VARCHAR(255) NOT NULL,
@@ -44,6 +54,9 @@ $sqlProductos = "CREATE TABLE IF NOT EXISTS productos (
 )
 ENGINE=InnoDB DEFAULT CHARSET=utf8mb4";
 
+$conn->query($sqlProductos);
+
+// Crear tabla usuarios
 $sqlUsuarios = "CREATE TABLE IF NOT EXISTS usuarios (
     id INT AUTO_INCREMENT PRIMARY KEY,
     nombre VARCHAR(255) NOT NULL,
@@ -52,36 +65,38 @@ $sqlUsuarios = "CREATE TABLE IF NOT EXISTS usuarios (
 )
 ENGINE=InnoDB DEFAULT CHARSET=utf8mb4";
 
-$conn->query($sqlProductos);
 $conn->query($sqlUsuarios);
 
-// Reparaciones/ajustes de esquema: añadir columnas faltantes si la tabla existe pero le faltan campos.
-// Añadir columna 'imagen' a productos si falta (evita errores como "Unknown column 'imagen'")
+// Verificar columna imagen
 $check = $conn->query("SHOW TABLES LIKE 'productos'");
 if ($check && $check->num_rows > 0) {
+
     $col = $conn->query("SHOW COLUMNS FROM productos LIKE 'imagen'");
     if (!$col || $col->num_rows == 0) {
         $conn->query("ALTER TABLE productos ADD COLUMN imagen VARCHAR(255) DEFAULT NULL");
     }
-    // Asegurar columnas 'precio' y 'cantidad' con tipos esperados si no existen
+
     $col2 = $conn->query("SHOW COLUMNS FROM productos LIKE 'precio'");
     if (!$col2 || $col2->num_rows == 0) {
         $conn->query("ALTER TABLE productos ADD COLUMN precio DECIMAL(10,2) NOT NULL DEFAULT 0");
     }
+
     $col3 = $conn->query("SHOW COLUMNS FROM productos LIKE 'cantidad'");
     if (!$col3 || $col3->num_rows == 0) {
         $conn->query("ALTER TABLE productos ADD COLUMN cantidad INT NOT NULL DEFAULT 0");
     }
 }
 
-// Añadir columna 'correo' a usuarios si falta
+// Verificar columna correo
 $checkU = $conn->query("SHOW TABLES LIKE 'usuarios'");
 if ($checkU && $checkU->num_rows > 0) {
+
     $colu = $conn->query("SHOW COLUMNS FROM usuarios LIKE 'correo'");
     if (!$colu || $colu->num_rows == 0) {
         $conn->query("ALTER TABLE usuarios ADD COLUMN correo VARCHAR(255) NOT NULL");
     }
+
 }
 
-// Ahora $conn está listo para usarse en otras páginas.
+// Conexión lista para usar
 ?>
